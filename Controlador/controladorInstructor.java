@@ -1,0 +1,76 @@
+package Controlador;
+
+import Modelo.db;
+
+import javax.swing.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class controladorInstructor extends db {
+    Connection conn = getdb();
+    public void borrarRegistro(int identificador) {
+        UIManager.put("OptionPane.yesButtonText", "Sí"); // Cambia "Yes" a "Sí"
+        UIManager.put("OptionPane.noButtonText", "No");   // Cambia "No" a "No"
+
+        int confirmacion = JOptionPane.showConfirmDialog(null, "¿Estás seguro de que deseas borrar este registro?", "Confirmar Borrado", JOptionPane.YES_NO_OPTION);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            try {
+                String personaQuery = "DELETE FROM persona WHERE persona.id_persona = ?";
+                PreparedStatement personaStatement = conn.prepareStatement(personaQuery);
+                personaStatement.setInt(1, identificador);
+                int personaFilas = personaStatement.executeUpdate();
+
+                if (personaFilas > 0) {
+                    String instructorQuery = "DELETE FROM instructor WHERE instructor.id_persona = ?";
+                    PreparedStatement instructorStatement = conn.prepareStatement(instructorQuery);
+                    instructorStatement.setInt(1, identificador);
+                    int instructorFilas = instructorStatement.executeUpdate();
+
+                    if (instructorFilas > 0) {
+                        JOptionPane.showMessageDialog(null, "Registro eliminado con éxito.");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "No se encontró el registro en la tabla de instructors correspondiente al identificador especificado.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "No se encontró el registro con el identificador especificado en la tabla de personas.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Error al intentar borrar el registro: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    public void actualizarRegistro(int identificador, String primerNombre, String segundoNombre, String apellidoPaterno, String apellidoMaterno, String fechaNacimiento, String folio) {
+        try {
+            String personaQuery = "UPDATE persona SET nombre_uno = ?, nombre_dos = ?, apellido_uno = ?, apellido_dos = ?, D_nacimiento = ? WHERE id_persona = ?";
+            PreparedStatement personaStatement = conn.prepareStatement(personaQuery);
+            personaStatement.setString(1, primerNombre);
+            personaStatement.setString(2, segundoNombre);
+            personaStatement.setString(3, apellidoPaterno);
+            personaStatement.setString(4, apellidoMaterno);
+            personaStatement.setString(5, fechaNacimiento);
+            personaStatement.setInt(6, identificador);
+            int personaFilas = personaStatement.executeUpdate();
+
+            if (personaFilas > 0) {
+                String instructorQuery = "UPDATE instructor SET folio = ? WHERE id_persona = ?";
+                PreparedStatement instructorStatement = conn.prepareStatement(instructorQuery);
+                instructorStatement.setString(1, folio);
+                instructorStatement.setInt(2, identificador);
+                int instructorFilas = instructorStatement.executeUpdate();
+
+                if (instructorFilas > 0) {
+                    JOptionPane.showMessageDialog(null, "Registro actualizado con éxito.");
+                } else {
+                    JOptionPane.showMessageDialog(null, "No se encontró el registro en la tabla de instructores correspondiente al identificador especificado.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró el registro con el identificador especificado en la tabla de personas.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error al intentar actualizar el registro: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
